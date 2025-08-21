@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prize Wheel - Spin to Win!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #4a5568;
+            margin-bottom: 30px;
+            font-size: 2.2rem;
+            font-weight: bold;
+        }
+
+        h2 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        /* Form Styles */
+        .form-container {
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .submit-btn, .spin-btn, .close-btn, .spin-again-btn, .admin-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn:hover, .spin-btn:hover, .close-btn:hover, .spin-again-btn:hover, .admin-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .admin-btn {
+            background: linear-gradient(45deg, #48bb78, #38a169);
+            font-size: 14px;
+            padding: 10px 20px;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+        }
+
+        /* Wheel Styles */
+        .wheel-wrapper {
+            position: relative;
+            margin: 40px auto;
+        }
+
+        .wheel {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            position: relative;
+            margin: 0 auto 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .pointer {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 30px solid #e53e3e;
+            z-index: 10;
+            filter: drop-shadow(0 3px 6px rgba(0,0,0,0.3));
+        }
+
+        .segment {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            transform-origin: 100% 100%;
+            clip-path: polygon(0 0, 100% 0, 0 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .segment-1 {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a6f);
+            transform: rotate(0deg);
+        }
+
+        .segment-2 {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            transform: rotate(90deg);
+        }
+
+        .segment-3 {
+            background: linear-gradient(45deg, #45b7d1, #96c93d);
+            transform: rotate(180deg);
+        }
+
+        .segment-4 {
+            background: linear-gradient(45deg, #f9ca24, #f0932b);
+            transform: rotate(270deg);
+        }
+
+        .prize-text {
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            transform: rotate(-45deg);
+            text-align: center;
+            position: absolute;
+            top: 25%;
+            left: 20%;
+            width: 80px;
+        }
+
+        .spin-btn {
+            font-size: 20px;
+            padding: 20px 40px;
+            background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .user-info {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            border-left: 5px solid #667eea;
+        }
+
+        .user-info p {
+            margin: 5px 0;
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 40px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            animation: modalSlideIn 0.5s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal h2 {
+            color: #48bb78;
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+
+        .modal p {
+            font-size: 18px;
+            color: #4a5568;
+            margin: 15px 0;
+        }
+
+        #prizeResult {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 24px;
+        }
+
+        .close-btn {
+            background: linear-gradient(45deg, #48bb78, #38a169);
+        }
+
+        .spin-again-btn {
+            background: linear-gradient(45deg, #ed8936, #dd6b20);
+        }
+
+        /* Admin Panel Styles */
+        .admin-panel {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 2000;
+            overflow-y: auto;
+        }
+
+        .admin-content {
+            background: white;
+            margin: 20px;
+            padding: 30px;
+            border-radius: 15px;
+            min-height: calc(100vh - 40px);
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 20px;
+        }
+
+        .close-admin {
+            background: #e53e3e;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .results-table th, .results-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .results-table th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .results-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .export-btn {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            margin-left: 10px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .container {
+                margin: 20px;
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .wheel {
+                width: 250px;
+                height: 250px;
+            }
+            
+            .prize-text {
+                font-size: 12px;
+                width: 70px;
+            }
+
+            .admin-content {
+                margin: 10px;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="admin-btn" onclick="showAdminPanel()">Admin Panel</button>
+
+    <div class="container">
+        <h1>🎡 Spin the Wheel to Win Amazing Prizes!</h1>
+        
+        <!-- User Details Form -->
+        <div class="form-container" id="userForm">
+            <h2>Enter Your Details</h2>
+            <form id="detailsForm">
+                <div class="input-group">
+                    <label for="userName">Full Name:</label>
+                    <input type="text" id="userName" name="userName" required>
+                </div>
+                <div class="input-group">
+                    <label for="userEmail">Email Address:</label>
+                    <input type="email" id="userEmail" name="userEmail" required>
+                </div>
+                <div class="input-group">
+                    <label for="userPhone">Phone Number:</label>
+                    <input type="tel" id="userPhone" name="userPhone" required>
+                </div>
+                <button type="submit" class="submit-btn">Continue to Wheel</button>
+            </form>
+        </div>
+
+        <!-- Prize Wheel Container -->
+        <div class="wheel-container" id="wheelContainer" style="display: none;">
+            <div class="wheel-wrapper">
+                <div class="wheel" id="wheel">
+                    <div class="segment segment-1">
+                        <span class="prize-text">Add on Course</span>
+                    </div>
+                    <div class="segment segment-2">
+                        <span class="prize-text">500Rs Off</span>
+                    </div>
+                    <div class="segment segment-3">
+                        <span class="prize-text">Learning Kit</span>
+                    </div>
+                    <div class="segment segment-4">
+                        <span class="prize-text">5% Off</span>
+                    </div>
+                </div>
+                <div class="pointer"></div>
+                <button class="spin-btn" id="spinBtn">SPIN</button>
+            </div>
+            
+            <div class="user-info">
+                <p><strong>Participant:</strong> <span id="displayName"></span></p>
+                <p><strong>Email:</strong> <span id="displayEmail"></span></p>
+            </div>
+        </div>
+
+        <!-- Result Modal -->
+        <div class="modal" id="resultModal">
+            <div class="modal-content">
+                <h2>🎉 Congratulations!</h2>
+                <p>You won: <span id="prizeResult"></span></p>
+                <p>Your result has been saved locally!</p>
+                <button onclick="closeModal()" class="close-btn">Close</button>
+                <button onclick="resetWheel()" class="spin-again-btn">Spin Again</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div class="admin-panel" id="adminPanel">
+        <div class="admin-content">
+            <div class="admin-header">
+                <h1>🎡 Prize Wheel Admin Panel</h1>
+                <button class="close-admin" onclick="hideAdminPanel()">✕ Close</button>
+            </div>
+            
+            <div class="stats-grid" id="statsGrid">
+                <!-- Stats will be populated by JavaScript -->
+            </div>
+
+            <div style="text-align: right; margin: 20px 0;">
+                <button onclick="clearAllData()" style="background: #e53e3e; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin-right: 10px;">Clear All Data</button>
+                <button class="export-btn" onclick="exportToCsv()">Export to CSV</button>
+            </div>
+
+            <table class="results-table" id="resultsTable">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Prize Won</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsBody">
+                    <!-- Results will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Prize configuration
+        const prizes = [
+            "Add on Course",
+            "500Rs Off", 
+            "Learning Kit",
+            "5% Off"
+        ];
+
+        // Global variables
+        let userDetails = null;
+        let isSpinning = false;
+
+        // DOM elements
+        const userForm = document.getElementById('userForm');
+        const detailsForm = document.getElementById('detailsForm');
+        const wheelContainer = document.getElementById('wheelContainer');
+        const wheel = document.getElementById('wheel');
+        const spinBtn = document.getElementById('spinBtn');
+        const resultModal = document.getElementById('resultModal');
+        const adminPanel = document.getElementById('adminPanel');
+
+        // Local Storage Functions
+        function saveResult(result) {
+            const results = getStoredResults();
+            result.id = Date.now().toString();
+            result.createdAt = new Date().toISOString();
+            results.push(result);
+            localStorage.setItem('prizeWheelResults', JSON.stringify(results));
+        }
+
+        function getStoredResults() {
+            const stored = localStorage.getItem('prizeWheelResults');
+            return stored ? JSON.parse(stored) : [];
+        }
+
+        function clearStoredResults() {
+            localStorage.removeItem('prizeWheelResults');
+        }
+
+        // Form submission handler
+        detailsForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(detailsForm);
+            userDetails = {
+                name: formData.get('userName'),
+                email: formData.get('userEmail'),
+                phone: formData.get('userPhone')
+            };
+            
+            // Validate form data
+            if (!userDetails.name || !userDetails.email || !userDetails.phone) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            if (!isValidEmail(userDetails.email)) {
+                alert('Please enter a valid email address');
+                return;
+            }
+            
+            // Show user details and enable wheel
+            displayUserInfo();
+            showWheel();
+        });
+
+        // Email validation
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        // Display user information
+        function displayUserInfo() {
+            document.getElementById('displayName').textContent = userDetails.name;
+            document.getElementById('displayEmail').textContent = userDetails.email;
+        }
+
+        // Show wheel section
+        function showWheel() {
+            userForm.style.display = 'none';
+            wheelContainer.style.display = 'block';
+        }
+
+        // Spin wheel handler
+        spinBtn.addEventListener('click', function() {
+            if (isSpinning || !userDetails) return;
+            
+            isSpinning = true;
+            spinBtn.disabled = true;
+            spinBtn.textContent = 'SPINNING...';
+            
+            // Random rotation (minimum 5 full rotations + random angle)
+            const randomAngle = Math.floor(Math.random() * 360);
+            const totalRotation = 1800 + randomAngle; // 5 full rotations + random
+            
+            // Apply rotation
+            wheel.style.transform = `rotate(${totalRotation}deg)`;
+            
+            // Calculate winning prize after spin completes
+            setTimeout(() => {
+                const normalizedAngle = totalRotation % 360;
+                const prizeIndex = Math.floor(normalizedAngle / 90);
+                const winningPrize = prizes[prizeIndex];
+                
+                // Store result locally
+                const result = {
+                    name: userDetails.name,
+                    email: userDetails.email,
+                    phone: userDetails.phone,
+                    prize: winningPrize
+                };
+                saveResult(result);
+                
+                // Show result
+                showResult(winningPrize);
+                
+                // Reset spinning state
+                isSpinning = false;
+                spinBtn.disabled = false;
+                spinBtn.textContent = 'SPIN';
+                
+            }, 4000); // Match CSS transition duration
+        });
+
+        // Show result modal
+        function showResult(prize) {
+            document.getElementById('prizeResult').textContent = prize;
+            resultModal.style.display = 'block';
+        }
+
+        // Close modal
+        function closeModal() {
+            resultModal.style.display = 'none';
+        }
+
+        // Reset wheel for another spin
+        function resetWheel() {
+            resultModal.style.display = 'none';
+            userForm.style.display = 'block';
+            wheelContainer.style.display = 'none';
+            
+            // Reset form
+            detailsForm.reset();
+            userDetails = null;
+            
+            // Reset wheel rotation
+            wheel.style.transform = 'rotate(0deg)';
+        }
+
+        // Admin Panel Functions
+        function showAdminPanel() {
+            adminPanel.style.display = 'block';
+            loadAdminData();
+        }
+
+        function hideAdminPanel() {
+            adminPanel.style.display = 'none';
+        }
+
+        function loadAdminData() {
+            const results = getStoredResults();
+            displayStats(results);
+            displayAdminResults(results);
+        }
+
+        function displayStats(results) {
+            const totalSpins = results.length;
+            const prizeCounts = {};
+            results.forEach(result => {
+                prizeCounts[result.prize] = (prizeCounts[result.prize] || 0) + 1;
+            });
+
+            const uniqueUsers = new Set(results.map(r => r.email)).size;
+            const lastSpin = results.length > 0 ? 
+                new Date(Math.max(...results.map(r => new Date(r.createdAt)))).toLocaleDateString() 
+                : 'N/A';
+
+            document.getElementById('statsGrid').innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">${totalSpins}</div>
+                    <div>Total Spins</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${Object.keys(prizeCounts).length}</div>
+                    <div>Different Prizes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${uniqueUsers}</div>
+                    <div>Unique Users</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${lastSpin}</div>
+                    <div>Last Spin</div>
+                </div>
+            `;
+        }
+
+        function displayAdminResults(results) {
+            const tbody = document.getElementById('resultsBody');
+            tbody.innerHTML = '';
+            
+            results.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            
+            results.forEach(result => {
+                const row = document.createElement('tr');
+                const date = new Date(result.createdAt).toLocaleString();
+                
+                row.innerHTML = `
+                    <td>${date}</td>
+                    <td>${result.name}</td>
+                    <td>${result.email}</td>
+                    <td>${result.phone}</td>
+                    <td><strong>${result.prize}</strong></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function exportToCsv() {
+            const results = getStoredResults();
+            const csvContent = "data:text/csv;charset=utf-8," 
+                + "Date,Name,Email,Phone,Prize\n"
+                + results.map(result => {
+                    const date = new Date(result.createdAt).toLocaleString();
+                    return `"${date}","${result.name}","${result.email}","${result.phone}","${result.prize}"`;
+                }).join("\n");
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "prize_wheel_results.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function clearAllData() {
+            if (confirm('Are you sure you want to delete all spin results? This cannot be undone.')) {
+                clearStoredResults();
+                loadAdminData();
+                alert('All data has been cleared.');
+            }
+        }
+
+        // Click outside modal to close
+        window.addEventListener('click', function(event) {
+            if (event.target === resultModal) {
+                closeModal();
+            }
+            if (event.target === adminPanel) {
+                hideAdminPanel();
+            }
+        });
+    </script>
+</body>
+</html>
